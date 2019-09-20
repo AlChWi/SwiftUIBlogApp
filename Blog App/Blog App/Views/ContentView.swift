@@ -12,18 +12,35 @@ import Combine
 struct ContentView: View {
     @EnvironmentObject var userData: UserData
     @State private var showModal = false
-
+    
     var body: some View {
-                NavigationView {
-        List(userData.posts) { post in
-            NavigationLink(destination: DetailView(post: post)) {
-                PostRow(post: post)
+        NavigationView {
+            List {
+                ForEach(userData.posts) { post in
+                    NavigationLink(destination: DetailView(post: post)) {
+                        PostRow(post: post)
+                    }
+                }.onDelete(perform: delete)
+                .onMove(perform: move)
+            }
+            .navigationBarTitle("My Posts", displayMode: .large)
+            .navigationBarItems(leading: UserInfoButton(showModal: $showModal), trailing: AddPostButton(showModal: $showModal))
+            .navigationBarBackButtonHidden(true)
+            
+        }
+    }
+    
+    func delete(at offsets: IndexSet) {
+        for index in offsets {
+            NetworkService().deletePost(userData.posts[index]) {
+                DispatchQueue.main.async {
+                    self.userData.posts.remove(atOffsets: offsets)
+                }
             }
         }
-        .navigationBarTitle("My Posts", displayMode: .large)
-        .navigationBarItems(leading: UserInfoButton(showModal: $showModal), trailing: AddPostButton(showModal: $showModal))
-            .navigationBarBackButtonHidden(true)
-                }
+    }
+    func move(from fromOffests: IndexSet, to toOffest: Int) {
+        userData.posts.move(fromOffsets: fromOffests, toOffset: toOffest)
     }
 }
 

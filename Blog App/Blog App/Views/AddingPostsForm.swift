@@ -38,20 +38,24 @@ struct AddingPostsForm: View {
                 TextField("Title", text: $postTitle)
                 MultilineTextView(text: $postBody).frame(height: 300)
             }.padding(.bottom)
-            .navigationBarTitle("Add Post", displayMode: .inline)
-            .navigationBarItems(leading: Button(action: {
-                self.presentationMode.wrappedValue.dismiss()
-            }) {
-                Text("Cancel")
-                }, trailing: Button(action: {
-                    let id = self.userData.user?.id
-                    guard let anID = id else { return }
-                    self.userData.posts.append(Post(userId: anID, title: self.postTitle, body: self.postBody))
-                    print("\(self.postBody) \(self.postTitle)")
+                .navigationBarTitle("Add Post", displayMode: .inline)
+                .navigationBarItems(leading: Button(action: {
                     self.presentationMode.wrappedValue.dismiss()
                 }) {
-                    Text("Done")
-            })
+                    Text("Cancel")
+                    }, trailing: Button(action: {
+                        let id = self.userData.user?.id
+                        guard let anID = id else { return }
+                        NetworkService().postCreatePost(Post(userId: anID, title: self.postTitle, body: self.postBody)) { (post) in
+                            DispatchQueue.main.async {
+                                self.userData.posts.append(post)
+                            }
+                        }
+                        print("\(self.postBody) \(self.postTitle)")
+                        self.presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Text("Done")
+                })
         }
     }
 }
